@@ -1,7 +1,7 @@
 setuptools
 tensorboardX
 thop
-torch
+torch==2.1.0
 torchsummary
 torchvision
 tqdm
@@ -9,7 +9,7 @@ wandb
 yacs
 fvcore
 imgaug
-numpy
+numpy < 2.0.0
 Pillow
 PyYAML
 easydict

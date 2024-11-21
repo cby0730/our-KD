@@ -372,3 +372,101 @@ class CRDDOT(BaseTrainer):
             train_meters["top5"].avg,
         )
         return msg
+
+class AugTrainer(BaseTrainer):
+    def train_iter(self, data, epoch, train_meters):
+        self.optimizer.zero_grad()
+        train_start_time = time.time()
+        image, target, index = data
+        train_meters["data_time"].update(time.time() - train_start_time)
+        image_weak, image_strong = image
+        image_weak, image_strong = image_weak.float(), image_strong.float()
+        image_weak, image_strong = image_weak.cuda(non_blocking=True), image_strong.cuda(non_blocking=True)
+        target = target.cuda(non_blocking=True)
+        index = index.cuda(non_blocking=True)
+
+        # forward
+        preds, losses_dict = self.distiller(image_weak=image_weak, image_strong=image_strong, target=target, epoch=epoch)
+
+        # backward
+        loss = sum([l.mean() for l in losses_dict.values()])
+        loss.backward()
+        self.optimizer.step()
+        train_meters["training_time"].update(time.time() - train_start_time)
+        # collect info
+        batch_size = image_weak.size(0)
+        acc1, acc5 = accuracy(preds, target, topk=(1, 5))
+        train_meters["losses"].update(loss.cpu().detach().numpy().mean(), batch_size)
+        train_meters["loss_kd"].update(losses_dict['loss_kd'].item(), batch_size)
+        train_meters["top1"].update(acc1[0], batch_size)
+        train_meters["top5"].update(acc5[0], batch_size)
+        # print info
+        msg = "Epoch:{}| Time(data):{:.3f}| Time(train):{:.3f}| Loss:{:.4f}| Loss-KD:{:.4f}| Top-1:{:.3f}| Top-5:{:.3f}".format(
+            epoch,
+            train_meters["data_time"].avg,
+            train_meters["training_time"].avg,
+            train_meters["losses"].avg,
+            train_meters["loss_kd"].avg,
+            train_meters["top1"].avg,
+            train_meters["top5"].avg,
+        )
+        return msg
+    
+class AugDOTTrainer(BaseTrainer):
+    def init_optimizer(self, cfg):
+        if cfg.SOLVER.TYPE == "SGD":
+            m_task = cfg.SOLVER.MOMENTUM - cfg.SOLVER.DOT.DELTA
+            m_kd = cfg.SOLVER.MOMENTUM + cfg.SOLVER.DOT.DELTA
+            optimizer = DistillationOrientedTrainer(
+                self.distiller.module.get_learnable_parameters(),
+                lr=cfg.SOLVER.LR,
+                momentum=m_task,
+                momentum_kd=m_kd,
+                weight_decay=cfg.SOLVER.WEIGHT_DECAY,
+            )
+        else:
+            raise NotImplementedError(cfg.SOLVER.TYPE)
+        return optimizer
+    
+    def train_iter(self, data, epoch, train_meters):
+        #self.optimizer.zero_grad() # zero the grads
+        train_start_time = time.time()
+        image, target, index = data
+        train_meters["data_time"].update(time.time() - train_start_time)
+        image_weak, image_strong = image
+        image_weak, image_strong = image_weak.float(), image_strong.float()
+        image_weak, image_strong = image_weak.cuda(non_blocking=True), image_strong.cuda(non_blocking=True)
+        target = target.cuda(non_blocking=True)
+        index = index.cuda(non_blocking=True)
+
+        # forward
+        preds, losses_dict = self.distiller(image_weak=image_weak, image_strong=image_strong, target=target, epoch=epoch)
+
+        # dot backward
+        loss_ce, loss_kd = losses_dict['loss_ce'].mean(), losses_dict['loss_kd'].mean()
+        self.optimizer.zero_grad(set_to_none=True)
+        loss_kd.backward(retain_graph=True)
+        self.optimizer.step_kd()
+        self.optimizer.zero_grad(set_to_none=True)
+        loss_ce.backward()
+        self.optimizer.step()
+
+        train_meters["training_time"].update(time.time() - train_start_time)
+        # collect info
+        batch_size = image_weak.size(0)
+        acc1, acc5 = accuracy(preds, target, topk=(1, 5))
+        train_meters["losses"].update((loss_ce + loss_kd).cpu().detach().numpy().mean(), batch_size)
+        train_meters["loss_kd"].update(losses_dict['loss_kd'].item(), batch_size)
+        train_meters["top1"].update(acc1[0], batch_size)
+        train_meters["top5"].update(acc5[0], batch_size)
+        # print info
+        msg = "Epoch:{}| Time(data):{:.3f}| Time(train):{:.3f}| Loss:{:.4f}| Loss-KD:{:.4f}| Top-1:{:.3f}| Top-5:{:.3f}".format(
+            epoch,
+            train_meters["data_time"].avg,
+            train_meters["training_time"].avg,
+            train_meters["losses"].avg,
+            train_meters["loss_kd"].avg,
+            train_meters["top1"].avg,
+            train_meters["top5"].avg,
+        )
+        return msg

@@ -5,16 +5,16 @@ from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
 from PIL import ImageOps, ImageEnhance, ImageDraw, Image
 import random
+from torchvision.transforms.functional import InterpolationMode
 
-data_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../data/imagenet')
+data_folder = '../data/tiny-imagenet-200'
 
-
-class ImageNet(ImageFolder):
+class TinyImageNet200(ImageFolder):
     def __getitem__(self, index):
         img, target = super().__getitem__(index)
         return img, target, index
 
-class ImageNetInstanceSample(ImageNet):
+class TinyImageNet200InstanceSample(TinyImageNet200):
     """: Folder datasets which returns (img, label, index, contrast_index):
     """
     def __init__(self, folder, transform=None, target_transform=None,
@@ -25,7 +25,7 @@ class ImageNetInstanceSample(ImageNet):
         self.is_sample = is_sample
         if self.is_sample:
             print('preparing contrastive data...')
-            num_classes = 1000
+            num_classes = 200
             num_samples = len(self.samples)
             label = np.zeros(num_samples, dtype=np.int32)
             for i in range(num_samples):
@@ -255,11 +255,11 @@ class RandAugment:
         img = Cutout(img, cutout_val)  # for fixmatch
         return img
 
-def get_imagenet_train_transform(mean, std):
+def get_tinyimagenet200_train_transform(mean, std):
     normalize = transforms.Normalize(mean=mean, std=std)
     train_transform = transforms.Compose(
         [
-            transforms.RandomResizedCrop(224),
+            transforms.RandomCrop(64, padding=8),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             normalize,
@@ -268,11 +268,11 @@ def get_imagenet_train_transform(mean, std):
     return train_transform
 
 
-def get_imagenet_train_transform_strong(mean, std):
+def get_tinyimagenet200_train_transform_strong(mean, std):
     normalize = transforms.Normalize(mean=mean, std=std)
     train_transform_weak = transforms.Compose(
         [
-            transforms.RandomResizedCrop(224),
+            transforms.RandomCrop(64, padding=8),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             normalize,
@@ -280,7 +280,7 @@ def get_imagenet_train_transform_strong(mean, std):
     )
     train_transform_strong = transforms.Compose(
         [
-            transforms.RandomResizedCrop(224),
+            transforms.RandomCrop(64, padding=8),
             transforms.RandomHorizontalFlip(),
             RandAugment(2, 10),
             transforms.ToTensor(),
@@ -291,53 +291,94 @@ def get_imagenet_train_transform_strong(mean, std):
     train_transform = MultipleApply([train_transform_weak, train_transform_strong])
     return train_transform
 
-def get_imagenet_test_transform(mean, std):
+def get_tinyimagenet200_train_transform_384(mean, std):
+    normalize = transforms.Normalize(mean=mean, std=std)
+    train_transform = transforms.Compose(
+        [
+            transforms.Resize(384, interpolation=InterpolationMode.BICUBIC),
+            transforms.RandomCrop(384, padding=8),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize,
+        ]
+    )
+    return train_transform
+
+def get_tinyimagenet200_test_transform(mean, std):
     normalize = transforms.Normalize(mean=mean, std=std)
     test_transform = transforms.Compose(
         [
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
             transforms.ToTensor(),
             normalize,
         ]
     )
     return test_transform
 
-def get_imagenet_dataloaders(batch_size, val_batch_size, num_workers,
+def get_tinyimagenet200_test_transform_384(mean, std):
+    normalize = transforms.Normalize(mean=mean, std=std)
+    test_transform = transforms.Compose(
+        [
+            transforms.Resize(384, interpolation=InterpolationMode.BICUBIC),
+            transforms.ToTensor(),
+            normalize,
+        ]
+    )
+    return test_transform
+
+def get_tinyimagenet200_dataloaders(batch_size, val_batch_size, num_workers,
     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
-    train_transform = get_imagenet_train_transform(mean, std)
+    train_transform = get_tinyimagenet200_train_transform(mean, std)
     train_folder = os.path.join(data_folder, 'train')
-    train_set = ImageNet(train_folder, transform=train_transform)
+    train_set = TinyImageNet200(train_folder, transform=train_transform)
     num_data = len(train_set)
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, 
         shuffle=True, num_workers=num_workers, pin_memory=True)
-    test_loader = get_imagenet_val_loader(val_batch_size, mean, std)
+    test_loader = get_tinyimagenet200_val_loader(val_batch_size, mean, std)
     return train_loader, test_loader, num_data
 
-def get_imagenet_dataloaders_strong(batch_size, val_batch_size, num_workers,
+def get_tinyimagenet200_dataloaders_strong(batch_size, val_batch_size, num_workers,
     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
-    train_transform = get_imagenet_train_transform_strong(mean, std)
+    train_transform = get_tinyimagenet200_train_transform_strong(mean, std)
     train_folder = os.path.join(data_folder, 'train')
-    train_set = ImageNet(train_folder, transform=train_transform)
+    train_set = TinyImageNet200(train_folder, transform=train_transform)
     num_data = len(train_set)
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size,
         shuffle=True, num_workers=num_workers, pin_memory=True)
-    test_loader = get_imagenet_val_loader(val_batch_size, mean, std)
+    test_loader = get_tinyimagenet200_val_loader(val_batch_size, mean, std)
     return train_loader, test_loader, num_data
 
-def get_imagenet_dataloaders_sample(batch_size, val_batch_size, num_workers, k=4096, 
+def get_tinyimagenet200_dataloaders_sample(batch_size, val_batch_size, num_workers, k=4096, 
     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
-    train_transform = get_imagenet_train_transform(mean, std)
+    train_transform = get_tinyimagenet200_train_transform(mean, std)
     train_folder = os.path.join(data_folder, 'train')
-    train_set = ImageNetInstanceSample(train_folder, transform=train_transform, is_sample=True, k=k)
+    train_set = TinyImageNet200InstanceSample(train_folder, transform=train_transform, is_sample=True, k=k)
     num_data = len(train_set)
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, 
         shuffle=True, num_workers=num_workers, pin_memory=True)
-    test_loader = get_imagenet_val_loader(val_batch_size, mean, std)
+    test_loader = get_tinyimagenet200_val_loader(val_batch_size, mean, std)
     return train_loader, test_loader, num_data
 
-def get_imagenet_val_loader(val_batch_size, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
-    test_transform = get_imagenet_test_transform(mean, std)
+def get_tinyimagenet200_val_loader(val_batch_size, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+    test_transform = get_tinyimagenet200_test_transform(mean, std)
+    test_folder = os.path.join(data_folder, 'val')
+    test_set = ImageFolder(test_folder, transform=test_transform)
+    test_loader = torch.utils.data.DataLoader(test_set,
+        batch_size=val_batch_size, shuffle=False, num_workers=16, pin_memory=True)
+    return test_loader
+
+def get_tinyimagenet200_dataloaders_384(batch_size, val_batch_size, num_workers,
+    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+    train_transform = get_tinyimagenet200_train_transform_384(mean, std)
+    train_folder = os.path.join(data_folder, 'train')
+    train_set = TinyImageNet200(train_folder, transform=train_transform)
+    num_data = len(train_set)
+    train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, 
+        shuffle=True, num_workers=num_workers, pin_memory=True)
+    test_loader = get_tinyimagenet200_val_loader_384(val_batch_size, mean, std)
+    return train_loader, test_loader, num_data
+
+def get_tinyimagenet200_val_loader_384(val_batch_size, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+    test_transform = get_tinyimagenet200_test_transform_384(mean, std)
     test_folder = os.path.join(data_folder, 'val')
     test_set = ImageFolder(test_folder, transform=test_transform)
     test_loader = torch.utils.data.DataLoader(test_set,

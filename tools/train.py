@@ -1,3 +1,4 @@
+import sys
 import os
 import argparse
 import torch
@@ -6,19 +7,40 @@ import torch.backends.cudnn as cudnn
 
 cudnn.benchmark = True
 
+# 獲取當前腳本的目錄
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# 獲取父目錄
+parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
+
+# 添加父目錄到 sys.path
+if parent_dir not in sys.path:
+    sys.path.append(parent_dir)
+
 from mdistiller.models import cifar_model_dict, imagenet_model_dict, tiny_imagenet_model_dict
 from mdistiller.distillers import distiller_dict
-from mdistiller.dataset import get_dataset
-from mdistiller.engine.utils import load_checkpoint, log_msg
+from mdistiller.dataset import get_dataset, get_dataset_strong
+from mdistiller.engine.utils import load_checkpoint, log_msg, seed_everything
 from mdistiller.engine.cfg import CFG as cfg
 from mdistiller.engine.cfg import show_cfg
 from mdistiller.engine import trainer_dict
 
 
 def main(cfg, resume, opts):
+    seed_everything(cfg.EXPERIMENT.SEED)
+
     experiment_name = cfg.EXPERIMENT.NAME
     if experiment_name == "":
         experiment_name = cfg.EXPERIMENT.TAG
+    if cfg.OURKD.ER:
+        experiment_name = 'er,' + experiment_name
+    if cfg.OURKD.STD:
+        experiment_name = 'std,' + experiment_name
+    if cfg.OURKD.STD2:
+        experiment_name = 'std2,' + experiment_name
+    if cfg.SOLVER.TRAINER == "dot":
+        experiment_name = 'dot,' + experiment_name
+
     tags = cfg.EXPERIMENT.TAG.split(",")
     if opts:
         addtional_tags = ["{}:{}".format(k, v) for k, v in zip(opts[::2], opts[1::2])]
@@ -37,7 +59,10 @@ def main(cfg, resume, opts):
     # cfg & loggers
     show_cfg(cfg)
     # init dataloader & models
-    train_loader, val_loader, num_data, num_classes = get_dataset(cfg)
+    if cfg.SOLVER.TRAINER == ['aug', 'aug_dot']:
+        train_loader, val_loader, num_data, num_classes = get_dataset_strong(cfg)
+    else:
+        train_loader, val_loader, num_data, num_classes = get_dataset(cfg)
 
     # vanilla
     if cfg.DISTILLER.TYPE == "NONE":
