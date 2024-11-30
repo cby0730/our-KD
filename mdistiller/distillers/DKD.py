@@ -10,6 +10,8 @@ def dkd_loss(logits_student, logits_teacher, target, alpha, beta, temperature):
     other_mask = _get_other_mask(logits_student, target)
     pred_student = F.softmax(logits_student / temperature, dim=1)
     pred_teacher = F.softmax(logits_teacher / temperature, dim=1)
+
+    # tckd
     pred_student = cat_mask(pred_student, gt_mask, other_mask)
     pred_teacher = cat_mask(pred_teacher, gt_mask, other_mask)
     log_pred_student = torch.log(pred_student)
@@ -18,18 +20,27 @@ def dkd_loss(logits_student, logits_teacher, target, alpha, beta, temperature):
         * (temperature**2)
         / target.shape[0]
     )
+
+    # tckd ce
+    # 提取目標類別的概率
+    target_prob_student = pred_student[:, 0]  # 形狀為 [64]
+    target_prob_teacher = pred_teacher[:, 0]  # 形狀為 [64]
+    # 計算目標類別的交叉熵損失
+    tckd_ce_loss = F.mse_loss(target_prob_student, target_prob_teacher)
+
+    # nckd
     pred_teacher_part2 = F.softmax(
-        logits_teacher / temperature - 1000.0 * gt_mask, dim=1
+        logits_teacher / temperature * other_mask, dim=1
     )
     log_pred_student_part2 = F.log_softmax(
-        logits_student / temperature - 1000.0 * gt_mask, dim=1
+        logits_student / temperature * other_mask, dim=1
     )
     nckd_loss = (
         F.kl_div(log_pred_student_part2, pred_teacher_part2, size_average=False)
         * (temperature**2)
         / target.shape[0]
     )
-    return alpha * tckd_loss + beta * nckd_loss
+    return alpha * tckd_loss + beta * nckd_loss + tckd_ce_loss
 
 
 def _get_gt_mask(logits, target):

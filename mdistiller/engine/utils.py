@@ -1,4 +1,5 @@
 import os
+import signal
 import torch
 import torch.nn as nn
 import numpy as np
@@ -7,6 +8,8 @@ import time
 from tqdm import tqdm
 import random
 
+# 用於儲存主進程 ID 的全域變數
+_main_pid = None
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""

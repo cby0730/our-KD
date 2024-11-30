@@ -38,7 +38,7 @@ class BaseTrainer(object):
     def init_optimizer(self, cfg):
         if cfg.SOLVER.TYPE == "SGD":
             optimizer = optim.SGD(
-                self.distiller.module.get_learnable_parameters(),
+                self.distiller.get_learnable_parameters(),
                 lr=cfg.SOLVER.LR,
                 momentum=cfg.SOLVER.MOMENTUM,
                 weight_decay=cfg.SOLVER.WEIGHT_DECAY,
@@ -130,11 +130,11 @@ class BaseTrainer(object):
             "optimizer": self.optimizer.state_dict(),
             "best_acc": self.best_acc,
         }
-        student_state = {"model": self.distiller.module.student.state_dict()}
-        save_checkpoint(state, os.path.join(self.log_path, "latest"))
+        student_state = {"model": self.distiller.student.state_dict()}
+        '''save_checkpoint(state, os.path.join(self.log_path, "latest"))
         save_checkpoint(
             student_state, os.path.join(self.log_path, "student_latest")
-        )
+        )'''
         if epoch % self.cfg.LOG.SAVE_CHECKPOINT_FREQ == 0:
             save_checkpoint(
                 state, os.path.join(self.log_path, "epoch_{}".format(epoch))
@@ -232,7 +232,7 @@ class DOT(BaseTrainer):
             m_task = cfg.SOLVER.MOMENTUM - cfg.SOLVER.DOT.DELTA
             m_kd = cfg.SOLVER.MOMENTUM + cfg.SOLVER.DOT.DELTA
             optimizer = DistillationOrientedTrainer(
-                self.distiller.module.get_learnable_parameters(),
+                self.distiller.get_learnable_parameters(),
                 lr=cfg.SOLVER.LR,
                 momentum=m_task,
                 momentum_kd=m_kd,
@@ -304,7 +304,7 @@ class CRDDOT(BaseTrainer):
             m_task = cfg.SOLVER.MOMENTUM - cfg.SOLVER.DOT.DELTA
             m_kd = cfg.SOLVER.MOMENTUM + cfg.SOLVER.DOT.DELTA
             optimizer = DistillationOrientedTrainer(
-                self.distiller.module.get_learnable_parameters(),
+                self.distiller.get_learnable_parameters(),
                 lr=cfg.SOLVER.LR,
                 momentum=m_task,
                 momentum_kd=m_kd,
@@ -418,7 +418,7 @@ class AugDOTTrainer(BaseTrainer):
             m_task = cfg.SOLVER.MOMENTUM - cfg.SOLVER.DOT.DELTA
             m_kd = cfg.SOLVER.MOMENTUM + cfg.SOLVER.DOT.DELTA
             optimizer = DistillationOrientedTrainer(
-                self.distiller.module.get_learnable_parameters(),
+                self.distiller.get_learnable_parameters(),
                 lr=cfg.SOLVER.LR,
                 momentum=m_task,
                 momentum_kd=m_kd,

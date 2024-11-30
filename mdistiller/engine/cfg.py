@@ -173,9 +173,14 @@ CFG.OURKD.ALPHA = 1.0
 CFG.OURKD.BETA = 8.0
 CFG.OURKD.T = 4.0
 CFG.OURKD.WARMUP = 20
-CFG.OURKD.ER = False
-CFG.OURKD.STD = False
-CFG.OURKD.STD2 = False
+CFG.OURKD.ER = False # ER-KD
+CFG.OURKD.STD = False # standard deviation
+CFG.OURKD.LS = False # soft labels
+CFG.OURKD.MTLS = False # multi-label smoothing
+CFG.OURKD.DT = False # dynamic temperature
+CFG.OURKD.MT = False # multi-temperature
+CFG.OURKD.CE = False # cross-entropy for tckd
+CFG.OURKD.DLS = False # dynamic label smoothing
 
 # DOT CFG
 CFG.SOLVER.DOT = CN()

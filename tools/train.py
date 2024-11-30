@@ -1,6 +1,7 @@
 import sys
 import os
 import argparse
+import signal
 import torch
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
@@ -27,6 +28,10 @@ from mdistiller.engine import trainer_dict
 
 
 def main(cfg, resume, opts):
+    if cfg.OURKD.MTLS and not cfg.OURKD.DLS and not cfg.OURKD.LS:
+        raise ValueError("MTLS must be used with DLS or LS")
+    if cfg.OURKD.MTLS and cfg.OURKD.DLS and cfg.OURKD.LS:
+        raise ValueError("MTLS cannot be used with DLS and LS at the same time")
     seed_everything(cfg.EXPERIMENT.SEED)
 
     experiment_name = cfg.EXPERIMENT.NAME
@@ -36,8 +41,20 @@ def main(cfg, resume, opts):
         experiment_name = 'er,' + experiment_name
     if cfg.OURKD.STD:
         experiment_name = 'std,' + experiment_name
-    if cfg.OURKD.STD2:
-        experiment_name = 'std2,' + experiment_name
+    if cfg.OURKD.LS:
+        experiment_name = 'sl,' + experiment_name
+    if cfg.OURKD.DT:
+        experiment_name = 'dt,' + experiment_name
+    if cfg.OURKD.MT:
+        experiment_name = 'mt,' + experiment_name
+    if cfg.OURKD.CE:
+        experiment_name = 'ce,' + experiment_name
+    if cfg.OURKD.DLS:
+        experiment_name = 'dls,' + experiment_name
+    if cfg.OURKD.MTLS and cfg.OURKD.LS:
+        experiment_name = 'mtls,' + experiment_name
+    if cfg.OURKD.MTLS and cfg.OURKD.DLS:
+        experiment_name = 'mtdls,' + experiment_name
     if cfg.SOLVER.TRAINER == "dot":
         experiment_name = 'dot,' + experiment_name
 
@@ -50,7 +67,6 @@ def main(cfg, resume, opts):
     if cfg.LOG.WANDB:
         try:
             import wandb
-
             wandb.init(project=cfg.EXPERIMENT.PROJECT, name=experiment_name, tags=tags)
         except:
             print(log_msg("Failed to use WANDB", "INFO"))
@@ -100,13 +116,14 @@ def main(cfg, resume, opts):
             distiller = distiller_dict[cfg.DISTILLER.TYPE](
                 model_student, model_teacher, cfg
             )
-    distiller = torch.nn.DataParallel(distiller.cuda())
+    #distiller = torch.nn.DataParallel(distiller.cuda())
+    distiller = distiller.cuda()
 
     if cfg.DISTILLER.TYPE != "NONE":
         print(
             log_msg(
                 "Extra parameters of {}: {}\033[0m".format(
-                    cfg.DISTILLER.TYPE, distiller.module.get_extra_parameters()
+                    cfg.DISTILLER.TYPE, distiller.get_extra_parameters()
                 ),
                 "INFO",
             )
