@@ -12,6 +12,7 @@ from .SP import SP
 from .VID import VID
 from .ReviewKD import ReviewKD
 from .DKD import DKD
+from .DTKD import DTKD
 from .our_KD import our_KD
 
 distiller_dict = {
@@ -29,5 +30,6 @@ distiller_dict = {
     "VID": VID,
     "REVIEWKD": ReviewKD,
     "DKD": DKD,
+    "DTKD": DTKD,
     "OURKD": our_KD
 }

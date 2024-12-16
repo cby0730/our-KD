@@ -102,7 +102,7 @@ def process_directories(base_dir, output_csv):
 
 if __name__ == "__main__":
     # 指定 base directory 和輸出 CSV 檔案名稱
-    base_directory = '/root/Work/mdistiller/output/cifar100_baselines/'
+    base_directory = '/root/Work/mdistiller/output/test/'
     output_csv_file = 'train_info/best_acc_results.csv'
     
     process_directories(base_directory, output_csv_file)

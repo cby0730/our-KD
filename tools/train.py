@@ -28,10 +28,8 @@ from mdistiller.engine import trainer_dict
 
 
 def main(cfg, resume, opts):
-    if cfg.OURKD.MTLS and not cfg.OURKD.DLS and not cfg.OURKD.LS:
-        raise ValueError("MTLS must be used with DLS or LS")
-    if cfg.OURKD.MTLS and cfg.OURKD.DLS and cfg.OURKD.LS:
-        raise ValueError("MTLS cannot be used with DLS and LS at the same time")
+    if cfg.OURKD.MTLS and not cfg.OURKD.LS:
+        raise ValueError("MTLS should be used with LS")
     seed_everything(cfg.EXPERIMENT.SEED)
 
     experiment_name = cfg.EXPERIMENT.NAME
@@ -43,20 +41,20 @@ def main(cfg, resume, opts):
         experiment_name = 'std,' + experiment_name
     if cfg.OURKD.LS:
         experiment_name = 'sl,' + experiment_name
-    if cfg.OURKD.DT:
-        experiment_name = 'dt,' + experiment_name
     if cfg.OURKD.MT:
         experiment_name = 'mt,' + experiment_name
-    if cfg.OURKD.CE:
-        experiment_name = 'ce,' + experiment_name
-    if cfg.OURKD.DLS:
-        experiment_name = 'dls,' + experiment_name
+    if cfg.OURKD.MSE:
+        experiment_name = 'mse,' + experiment_name
+    if cfg.OURKD.MAE:
+        experiment_name = 'mae,' + experiment_name
+    if cfg.OURKD.RV:
+        experiment_name = 'rv,' + experiment_name
     if cfg.OURKD.MTLS and cfg.OURKD.LS:
         experiment_name = 'mtls,' + experiment_name
-    if cfg.OURKD.MTLS and cfg.OURKD.DLS:
-        experiment_name = 'mtdls,' + experiment_name
-    if cfg.SOLVER.TRAINER == "dot":
-        experiment_name = 'dot,' + experiment_name
+    if cfg.SOLVER.TRAINER == "aug_dot":
+        experiment_name = 'aug_dot,' + experiment_name
+    if cfg.SOLVER.TRAINER == "aug":
+        experiment_name = 'aug,' + experiment_name
 
     tags = cfg.EXPERIMENT.TAG.split(",")
     if opts:
@@ -75,7 +73,7 @@ def main(cfg, resume, opts):
     # cfg & loggers
     show_cfg(cfg)
     # init dataloader & models
-    if cfg.SOLVER.TRAINER == ['aug', 'aug_dot']:
+    if cfg.SOLVER.TRAINER in ['aug', 'aug_dot']:
         train_loader, val_loader, num_data, num_classes = get_dataset_strong(cfg)
     else:
         train_loader, val_loader, num_data, num_classes = get_dataset(cfg)

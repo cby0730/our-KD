@@ -95,6 +95,7 @@ class BaseTrainer(object):
             "training_time": AverageMeter(),
             "data_time": AverageMeter(),
             "losses": AverageMeter(),
+            "loss_kd": AverageMeter(),
             "top1": AverageMeter(),
             "top5": AverageMeter(),
         }

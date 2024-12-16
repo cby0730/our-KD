@@ -9,6 +9,8 @@ import multiprocessing
 
 # 設定 log 檔案名稱
 log_file = 'train_info/execution_log.txt'
+# 確保日誌目錄存在
+os.makedirs(os.path.dirname(log_file), exist_ok=True)
 # 建立全域的鎖
 log_lock = threading.Lock()
 
@@ -58,7 +60,7 @@ def build_commands(transformations, configs, param_mapping):
     for transformation in transformations:
         for config in configs[transformation]:
             config_path = f"configs/cifar100/{transformation}/{config}.yaml"
-            base_command = ["pipenv", "run", "python3", "tools/train.py", "--cfg", config_path, 'SOLVER.TRAINER', 'dot', 'OURKD.LS', 'True', 'OURKD.MT', 'True', 'OURKD.STD', 'True']
+            base_command = ["pipenv", "run", "python3", "tools/train.py", "--cfg", config_path, 'EXPERIMENT.PROJECT', 'test', 'OURKD.LS', 'True', 'OURKD.MT', 'True', 'OURKD.STD', 'True', 'OURKD.MTLS', 'True', 'SOLVER.TRAINER', 'aug_dot']
             for param_combo in param_combinations:
                 params = []
                 for param in param_combo:
@@ -140,44 +142,68 @@ def main():
     configs = {
         'our_kd': [
             'res32x4_res8x4',
-            #'res32x4_shuv2',
-            #'res50_mv2',
-            #'vgg13_mv2',
+            'res32x4_shuv1',
+            'res32x4_shuv2',
+            'res50_mv2',
+            'res56_res20',
+            'res110_res32',
+            'vgg13_mv2',
             'vgg13_vgg8',
+            'wrn40_2_shuv1',
             'wrn40_2_wrn_16_2',
-            #'wrn40_2_wrn_40_1'
+            'wrn40_2_wrn_40_1'
         ],
         'kd': [
             'res32x4_res8x4',
-            #'res32x4_shuv2',
-            #'res50_mv2',
-            #'vgg13_mv2',
+            'res32x4_shuv1',
+            'res32x4_shuv2',
+            'res50_mv2',
+            'res56_res20',
+            'res110_res32',
+            'vgg13_mv2',
             'vgg13_vgg8',
+            'wrn40_2_shuv1',
             'wrn40_2_wrn_16_2',
-            #'wrn40_2_wrn_40_1'
+            'wrn40_2_wrn_40_1'
         ],
         'dkd': [
             'res32x4_res8x4',
-            #'res32x4_shuv2',
-            #'res50_mv2',
-            #'vgg13_mv2',
+            'res32x4_shuv1',
+            'res32x4_shuv2',
+            'res50_mv2',
+            'res56_res20',
+            'res110_res32',
+            'vgg13_mv2',
             'vgg13_vgg8',
+            'wrn40_2_shuv1',
             'wrn40_2_wrn_16_2',
-            #'wrn40_2_wrn_40_1'
+            'wrn40_2_wrn_40_1'
+        ],
+        'dtkd': [
+            'res32x4_res8x4',
+            'res32x4_shuv1',
+            'res32x4_shuv2',
+            'res50_mv2',
+            'res56_res20',
+            'res110_res32',
+            'vgg13_mv2',
+            'vgg13_vgg8',
+            'wrn40_2_shuv1',
+            'wrn40_2_wrn_16_2',
+            'wrn40_2_wrn_40_1'
         ]
     }
 
     # 定義參數映射
     param_mapping = {
+        #'aug_dot': ('SOLVER.TRAINER', 'aug_dot'),
         #'LS': ('OURKD.LS', 'True'),
-        'ER': ('OURKD.ER', 'True'),
-        #'DOT': ('SOLVER.TRAINER', 'dot'),
+        #'MTLS': ('OURKD.MTLS', 'True'), 
+        #'MT': ('OURKD.MT', 'True'), 
         #'STD': ('OURKD.STD', 'True'),
-        'DT': ('OURKD.DT', 'True'),
-        #'MT': ('OURKD.MT', 'True'),
-        'CE': ('OURKD.CE', 'True'),
-        'DLS': ('OURKD.DLS', 'True'),
-        'MTLS': ('OURKD.MTLS', 'True'),
+        'MSE': ('OURKD.MSE', 'True'),
+        'MAE': ('OURKD.MAE', 'True'),
+        'RV': ('OURKD.RV', 'True'),
     }
 
     # 生成所有命令

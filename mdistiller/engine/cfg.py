@@ -167,6 +167,15 @@ CFG.DKD.BETA = 8.0
 CFG.DKD.T = 4.0
 CFG.DKD.WARMUP = 20
 
+# DTKD(Dynamic Temperature Knowledge Distillation) CFG
+CFG.DTKD = CN()
+CFG.DTKD.LOSS = CN()
+CFG.DTKD.ALPHA = 3.0      # DTKD
+CFG.DTKD.BETA = 1.0       # KD
+CFG.DTKD.CE_WEIGHT = 1.0  # CE
+CFG.DTKD.T = 4
+CFG.DTKD.WARMUP = 20
+
 CFG.OURKD = CN()
 CFG.OURKD.CE_WEIGHT = 1.0
 CFG.OURKD.ALPHA = 1.0
@@ -177,10 +186,10 @@ CFG.OURKD.ER = False # ER-KD
 CFG.OURKD.STD = False # standard deviation
 CFG.OURKD.LS = False # soft labels
 CFG.OURKD.MTLS = False # multi-label smoothing
-CFG.OURKD.DT = False # dynamic temperature
 CFG.OURKD.MT = False # multi-temperature
-CFG.OURKD.CE = False # cross-entropy for tckd
-CFG.OURKD.DLS = False # dynamic label smoothing
+CFG.OURKD.MSE = False # MSE for tckd
+CFG.OURKD.MAE = False # MAE for tckd
+CFG.OURKD.RV = False # Reverse KL
 
 # DOT CFG
 CFG.SOLVER.DOT = CN()
