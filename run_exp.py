@@ -16,7 +16,7 @@ log_lock = threading.Lock()
 
 # 新增 GPU 相關設定
 GPUS = [0, 1]  # 使用的 GPU 編號
-MAX_EXPERIMENTS_PER_GPU = 6  # 每個 GPU 最多執行的實驗數
+MAX_EXPERIMENTS_PER_GPU = 4  # 每個 GPU 最多執行的實驗數
 
 class GPUManager:
     def __init__(self, gpu_ids, max_experiments_per_gpu):
@@ -60,7 +60,21 @@ def build_commands(transformations, configs, param_mapping):
     for transformation in transformations:
         for config in configs[transformation]:
             config_path = f"configs/cifar100/{transformation}/{config}.yaml"
-            base_command = ["pipenv", "run", "python3", "tools/train.py", "--cfg", config_path, 'EXPERIMENT.PROJECT', 'test', 'OURKD.LS', 'True', 'OURKD.MT', 'True', 'OURKD.STD', 'True', 'OURKD.MTLS', 'True', 'SOLVER.TRAINER', 'aug_dot']
+            base_command = ["pipenv", "run", "python3", "tools/train.py", "--cfg", config_path, 
+                            'EXPERIMENT.PROJECT', 'ablation', 
+                            #'OURKD.LS', 'True', 
+                            #'OURKD.MT', 'True', 
+                            #'OURKD.STD', 'True', 
+                            #'OURKD.MTLS', 'True', 
+                            #'OURKD.MSE', 'True',
+                            #'OURKD.ALPHA', '1.0',
+                            #'OURKD.BETA', '8.0',
+                            #'OURKD.LS_WEIGHT', '1.0',
+                            #'OURKD.MSE_WEIGHT', '1.0',
+                            #'OURKD.MAE_WEIGHT', '1.0',
+                            #'OURKD.RV_WEIGHT', '1.0',
+                            #'OURKD.CT_WEIGHT', '1.0',
+                            'SOLVER.TRAINER', 'aug_dot']
             for param_combo in param_combinations:
                 params = []
                 for param in param_combo:
@@ -142,16 +156,16 @@ def main():
     configs = {
         'our_kd': [
             'res32x4_res8x4',
-            'res32x4_shuv1',
-            'res32x4_shuv2',
+            #'res32x4_shuv1',
+            #'res32x4_shuv2',
             'res50_mv2',
-            'res56_res20',
-            'res110_res32',
-            'vgg13_mv2',
+            #'res56_res20',
+            #'res110_res32',
+            #'vgg13_mv2',
             'vgg13_vgg8',
-            'wrn40_2_shuv1',
-            'wrn40_2_wrn_16_2',
-            'wrn40_2_wrn_40_1'
+            #'wrn40_2_shuv1',
+            #'wrn40_2_wrn_16_2',
+            #'wrn40_2_wrn_40_1'
         ],
         'kd': [
             'res32x4_res8x4',
@@ -197,13 +211,17 @@ def main():
     # 定義參數映射
     param_mapping = {
         #'aug_dot': ('SOLVER.TRAINER', 'aug_dot'),
-        #'LS': ('OURKD.LS', 'True'),
-        #'MTLS': ('OURKD.MTLS', 'True'), 
-        #'MT': ('OURKD.MT', 'True'), 
-        #'STD': ('OURKD.STD', 'True'),
+        'LS': ('OURKD.LS', 'True'),
+        #'ER': ('OURKD.ER', 'True'),
+        'MTLS': ('OURKD.MTLS', 'True'), 
+        'MT': ('OURKD.MT', 'True'), 
+        'STD': ('OURKD.STD', 'True'),
         'MSE': ('OURKD.MSE', 'True'),
         'MAE': ('OURKD.MAE', 'True'),
         'RV': ('OURKD.RV', 'True'),
+        'CT': ('OURKD.CT', 'True'),
+        'CR': ('OURKD.CR', 'True'),
+        #'DT': ('OURKD.DT', 'True'),
     }
 
     # 生成所有命令

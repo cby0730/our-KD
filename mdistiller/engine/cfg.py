@@ -181,15 +181,24 @@ CFG.OURKD.CE_WEIGHT = 1.0
 CFG.OURKD.ALPHA = 1.0
 CFG.OURKD.BETA = 8.0
 CFG.OURKD.T = 4.0
+CFG.OURKD.TEMPERATURES = [1.0, 2.0, 3.0, 4.0]
 CFG.OURKD.WARMUP = 20
 CFG.OURKD.ER = False # ER-KD
 CFG.OURKD.STD = False # standard deviation
 CFG.OURKD.LS = False # soft labels
 CFG.OURKD.MTLS = False # multi-label smoothing
+CFG.OURKD.LS_WEIGHT = 1.0
 CFG.OURKD.MT = False # multi-temperature
 CFG.OURKD.MSE = False # MSE for tckd
+CFG.OURKD.MSE_WEIGHT = 1.0
 CFG.OURKD.MAE = False # MAE for tckd
+CFG.OURKD.MAE_WEIGHT = 1.0
 CFG.OURKD.RV = False # Reverse KL
+CFG.OURKD.RV_WEIGHT = 1.0
+CFG.OURKD.CT = False # Contrastive KD
+CFG.OURKD.CT_WEIGHT = 1.0
+CFG.OURKD.CR = False # Confidence Reweighting
+CFG.OURKD.DT = False # Dynamic Temperature
 
 # DOT CFG
 CFG.SOLVER.DOT = CN()

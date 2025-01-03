@@ -49,6 +49,12 @@ def main(cfg, resume, opts):
         experiment_name = 'mae,' + experiment_name
     if cfg.OURKD.RV:
         experiment_name = 'rv,' + experiment_name
+    if cfg.OURKD.CT:
+        experiment_name = 'ct,' + experiment_name
+    if cfg.OURKD.CR:
+        experiment_name = 'cr,' + experiment_name
+    if cfg.OURKD.DT:
+        experiment_name = 'dt,' + experiment_name
     if cfg.OURKD.MTLS and cfg.OURKD.LS:
         experiment_name = 'mtls,' + experiment_name
     if cfg.SOLVER.TRAINER == "aug_dot":
